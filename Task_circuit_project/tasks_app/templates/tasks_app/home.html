@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - TaskCircuit{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1 class="dashboard-title">Welcome back, {{ user.first_name }}! <span class="material-icons">waving_hand</span></h1>
+            <p class="dashboard-subtitle">Here are your tasks for today - {{ today|date:"F d, Y" }}</p>
+        </div>
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-icon"><span class="material-icons">assignment</span></div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ tasks|length }}</div>
+                    <div class="stat-label">Today's Tasks</div>
+                </div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-icon"><span class="material-icons">check_circle</span></div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ completed_count }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="task-form-section">
+            <div class="section-card">
+                <div class="card-header">
+                    <h2 class="section-title">
+                        <span class="title-icon"><span class="material-icons">add_circle</span></span>
+                        Add New Task
+                    </h2>
+                </div>
+                <form method="post" class="task-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">
+                            <span class="label-icon"><span class="material-icons">edit_note</span></span> Task Title
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <span class="error-text">{{ form.title.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.priority.id_for_label }}">
+                                <span class="label-icon"><span class="material-icons">track_changes</span></span> Priority
+                            </label>
+                            {{ form.priority }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.scheduled_date.id_for_label }}">
+                                <span class="label-icon"><span class="material-icons">calendar_today</span></span> Date
+                            </label>
+                            {{ form.scheduled_date }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span class="btn-icon"><span class="material-icons">rocket_launch</span></span> Add Task
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="tasks-list-section">
+            <div class="section-card">
+                <div class="card-header">
+                    <h2 class="section-title">
+                        <span class="title-icon"><span class="material-icons">format_list_bulleted</span></span>
+                        Today's Tasks
+                    </h2>
+                    <div class="header-actions">
+                        <a href="{% url 'history' %}" class="btn-link">
+                            <span class="material-icons" style="font-size: 18px; vertical-align: middle;">bar_chart</span> View History
+                        </a>
+                        <a href="{% url 'schedule' %}" class="btn-link">
+                            <span class="material-icons" style="font-size: 18px; vertical-align: middle;">event</span> Schedule
+                        </a>
+                    </div>
+                </div>
+
+                <div class="tasks-container">
+                    {% if tasks %}
+                        {% for task in tasks %}
+                        <div class="task-item {% if task.completed %}completed{% endif %} priority-{{ task.priority }}">
+                            <div class="task-checkbox">
+                                <form method="post" action="{% url 'toggle_task' task.id %}" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="checkbox-btn">
+                                        {% if task.completed %}
+                                            <span class="check-icon checked"><span class="material-icons">check</span></span>
+                                        {% else %}
+                                            <span class="check-icon"></span>
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="task-content">
+                                <h3 class="task-title">{{ task.title }}</h3>
+                                <div class="task-meta">
+                                    <span class="priority-badge priority-{{ task.priority }}">
+                                        <span class="material-icons" style="font-size: 14px; vertical-align: middle;">fiber_manual_record</span>
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                    {% if task.completed %}
+                                        <span class="completed-badge">
+                                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">done_all</span> Completed at {{ task.completed_at|date:"g:i A" }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="task-actions">
+                                <form method="post" action="{% url 'delete_task' task.id %}" class="inline-form" onsubmit="return confirm('Delete this task?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-icon-action delete">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon"><span class="material-icons">inventory_2</span></div>
+                            <h3 class="empty-title">No tasks for today!</h3>
+                            <p class="empty-text">Add your first task to get started</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

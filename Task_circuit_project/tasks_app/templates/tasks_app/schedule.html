@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Schedule - TaskCircuit{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+    <div class="schedule-header">
+        <h1 class="page-title">
+            <span class="title-icon"><span class="material-icons">calendar_month</span></span>
+            Schedule Future Tasks
+        </h1>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <span class="material-icons">arrow_back</span> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="schedule-grid">
+        <div class="schedule-form-section">
+            <div class="section-card">
+                <h2 class="section-title">
+                    <span class="title-icon"><span class="material-icons">add_circle</span></span>
+                    Add Scheduled Task
+                </h2>
+
+                <form method="post" class="schedule-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">
+                            <span class="label-icon"><span class="material-icons">edit_note</span></span> Task Title
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <span class="error-text">{{ form.title.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.priority.id_for_label }}">
+                            <span class="label-icon"><span class="material-icons">low_priority</span></span> Priority Level
+                        </label>
+                        {{ form.priority }}
+                        {% if form.priority.errors %}
+                            <span class="error-text">{{ form.priority.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.scheduled_date.id_for_label }}">
+                            <span class="label-icon"><span class="material-icons">calendar_today</span></span> Schedule Date
+                        </label>
+                        {{ form.scheduled_date }}
+                        {% if form.scheduled_date.errors %}
+                            <span class="error-text">{{ form.scheduled_date.errors.0 }}</span>
+                        {% endif %}
+                        <small class="form-hint">Choose a future date for this task</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span class="btn-icon"><span class="material-icons">rocket_launch</span></span> Schedule Task
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="upcoming-tasks-section">
+            <div class="section-card">
+                <h2 class="section-title">
+                    <span class="title-icon"><span class="material-icons">format_list_bulleted</span></span>
+                    Upcoming Tasks
+                    <span class="task-count">{{ upcoming_tasks|length }}</span>
+                </h2>
+
+                <div class="tasks-timeline">
+                    {% if upcoming_tasks %}
+                        {% regroup upcoming_tasks by scheduled_date as tasks_by_date %}
+                        {% for date_group in tasks_by_date %}
+                        <div class="date-group">
+                            <div class="date-header">
+                                <span class="date-icon"><span class="material-icons">event</span></span>
+                                <div>
+                                    <h3 class="date-title">{{ date_group.grouper|date:"F d, Y" }}</h3>
+                                    <p class="date-subtitle">{{ date_group.grouper|date:"l" }}</p>
+                                </div>
+                                <span class="date-badge">{{ date_group.list|length }} task{{ date_group.list|length|pluralize }}</span>
+                            </div>
+
+                            <div class="date-tasks">
+                                {% for task in date_group.list %}
+                                <div class="schedule-task-item priority-{{ task.priority }}">
+                                    <div class="task-indicator"></div>
+                                    <div class="task-content">
+                                        <h4 class="task-title">{{ task.title }}</h4>
+                                        <div class="task-meta">
+                                            <span class="priority-badge priority-{{ task.priority }}">
+                                                <span class="material-icons" style="font-size: 14px; vertical-align: middle;">fiber_manual_record</span>
+                                                {{ task.get_priority_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="task-actions">
+                                        <form method="post" action="{% url 'delete_task' task.id %}" class="inline-form" onsubmit="return confirm('Delete this scheduled task?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-icon-action delete">
+                                                <span class="material-icons">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon"><span class="material-icons">inventory_2</span></div>
+                            <h3 class="empty-title">No Upcoming Tasks</h3>
+                            <p class="empty-text">Schedule tasks for future dates to see them here</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.schedule-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.schedule-grid {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 30px;
+}
+
+.schedule-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    display: block;
+}
+
+.task-count {
+    background: var(--bright-blue);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-left: auto;
+}
+
+.tasks-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.date-group {
+    border-left: 3px solid var(--bright-blue);
+    padding-left: 20px;
+    position: relative;
+}
+
+.date-group::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 8px;
+    width: 13px;
+    height: 13px;
+    background: var(--bright-blue);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--secondary-blue);
+}
+
+.date-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    background: var(--primary-blue);
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.date-icon {
+    font-size: 28px;
+}
+
+.date-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.date-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.date-badge {
+    margin-left: auto;
+    background: var(--accent-blue);
+    color: var(--text-primary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.date-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.schedule-task-item {
+    background: var(--primary-blue);
+    border: 2px solid var(--border-color);
+    border-left: 4px solid var(--bright-blue);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.schedule-task-item:hover {
+    transform: translateX(8px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.schedule-task-item.priority-high {
+    border-left-color: #ef4444;
+}
+
+.schedule-task-item.priority-medium {
+    border-left-color: #f59e0b;
+}
+
+.schedule-task-item.priority-low {
+    border-left-color: #10b981;
+}
+
+.task-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bright-blue);
+    flex-shrink: 0;
+}
+
+.schedule-task-item.priority-high .task-indicator {
+    background: #ef4444;
+}
+
+.schedule-task-item.priority-medium .task-indicator {
+    background: #f59e0b;
+}
+
+.schedule-task-item.priority-low .task-indicator {
+    background: #10b981;
+}
+
+@media (max-width: 1024px) {
+    .schedule-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .schedule-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .date-header {
+        flex-wrap: wrap;
+    }
+    
+    .date-badge {
+        width: 100%;
+        text-align: center;
+        margin-left: 0;
+    }
+}
+</style>
+{% endblock %}

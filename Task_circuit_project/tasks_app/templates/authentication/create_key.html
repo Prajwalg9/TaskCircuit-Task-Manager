@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Unique Key - TaskCircuit{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon"><span class="material-icons">lock</span></div>
+            <h2 class="auth-title">Create Your Login Key</h2>
+            <p class="auth-subtitle">Choose a memorable 6-digit key to access your account</p>
+        </div>
+        
+        {% if suggested_key %}
+        <div class="suggestion-box">
+            <div class="suggestion-header">
+                <span class="suggestion-icon"><span class="material-icons">lightbulb</span></span>
+                <span>Suggested Key</span>
+            </div>
+            <div class="suggested-key">{{ suggested_key }}</div>
+            <button type="button" class="btn-suggestion" onclick="useKey('{{ suggested_key }}')">
+                Use This Key
+            </button>
+        </div>
+        {% endif %}
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.unique_key.id_for_label }}">
+                    <span class="label-icon"><span class="material-icons">pin</span></span> Your 6-Digit Key
+                </label>
+                {{ form.unique_key }}
+                {% if form.unique_key.errors %}
+                    <div class="field-error">{{ form.unique_key.errors.0 }}</div>
+                {% endif %}
+                <small class="form-help">
+                    <span class="help-icon"><span class="material-icons">warning</span></span> Avoid patterns like 000000, 123456, or 111111
+                </small>
+            </div>
+            
+            <div class="key-requirements">
+                <p class="requirements-title">Key Requirements:</p>
+                <ul class="requirements-list">
+                    <li><span class="check-icon"><span class="material-icons">check</span></span> Exactly 6 digits</li>
+                    <li><span class="check-icon"><span class="material-icons">check</span></span> No weak patterns</li>
+                    <li><span class="check-icon"><span class="material-icons">check</span></span> Unique and available</li>
+                </ul>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+                Create Key & Continue to Login <span class="material-icons">arrow_forward</span>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function useKey(key) {
+    document.getElementById('id_unique_key').value = key;
+}
+
+const keyInput = document.getElementById('id_unique_key');
+if (keyInput) {
+    keyInput.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+    });
+}
+</script>
+{% endblock %}

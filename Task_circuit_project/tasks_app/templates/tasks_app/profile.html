@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - TaskCircuit{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1 class="page-title">
+            <span class="title-icon"><span class="material-icons">account_circle</span></span>
+            Your Profile
+        </h1>
+    </div>
+
+    <div class="profile-grid">
+        <div class="profile-card">
+            <div class="profile-avatar-section">
+                {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
+                {% else %}
+                    <div class="profile-avatar-placeholder">
+                        {{ user.first_name.0 }}{{ user.last_name.0 }}
+                    </div>
+                {% endif %}
+                <div class="profile-name">
+                    <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+                    <p class="profile-username">@{{ user.username }}</p>
+                </div>
+            </div>
+
+            <div class="profile-details">
+                <div class="detail-item">
+                    <span class="detail-icon"><span class="material-icons">email</span></span>
+                    <div>
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">{{ user.email }}</div>
+                    </div>
+                </div>
+
+                {% if profile.age %}
+                <div class="detail-item">
+                    <span class="detail-icon"><span class="material-icons">cake</span></span>
+                    <div>
+                        <div class="detail-label">Age</div>
+                        <div class="detail-value">{{ profile.age }} years</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="detail-item">
+                    <span class="detail-icon"><span class="material-icons">vpn_key</span></span>
+                    <div>
+                        <div class="detail-label">Unique Key</div>
+                        <div class="detail-value key-value">{{ profile.unique_key }}</div>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-icon"><span class="material-icons">calendar_month</span></span>
+                    <div>
+                        <div class="detail-label">Member Since</div>
+                        <div class="detail-value">{{ profile.date_of_register|date:"F d, Y" }}</div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-icon"><span class="material-icons">palette</span></span>
+                    <div>
+                        <div class="detail-label">Current Theme</div>
+                        <div class="detail-value">
+                            {% if profile.dark_theme %}
+                                <span class="material-icons" style="font-size: 18px; vertical-align: middle;">dark_mode</span> Dark Mode
+                            {% else %}
+                                <span class="material-icons" style="font-size: 18px; vertical-align: middle;">light_mode</span> Light Mode
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <h3 class="card-title">
+                <span class="title-icon"><span class="material-icons">insights</span></span>
+                Your Statistics
+            </h3>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-icon"><span class="material-icons">assignment</span></div>
+                    <div class="stat-number">{{ total_tasks }}</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+
+                <div class="stat-box success">
+                    <div class="stat-icon"><span class="material-icons">check_circle</span></div>
+                    <div class="stat-number">{{ completed_tasks }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+
+                <div class="stat-box warning">
+                    <div class="stat-icon"><span class="material-icons">pending_actions</span></div>
+                    <div class="stat-number">{{ pending_tasks }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+
+                <div class="stat-box info">
+                    <div class="stat-icon"><span class="material-icons">trending_up</span></div>
+                    <div class="stat-number">{{ completion_rate }}%</div>
+                    <div class="stat-label">Completion Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="edit-card">
+            <h3 class="card-title">
+                <span class="title-icon"><span class="material-icons">edit</span></span>
+                Edit Profile
+            </h3>
+
+            <form method="post" enctype="multipart/form-data" class="edit-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_info">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name">
+                            <span class="label-icon"><span class="material-icons">person</span></span> First Name
+                        </label>
+                        <input type="text" name="first_name" id="first_name" value="{{ user.first_name }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="last_name">
+                            <span class="label-icon"><span class="material-icons">person</span></span> Last Name
+                        </label>
+                        <input type="text" name="last_name" id="last_name" value="{{ user.last_name }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">
+                        <span class="label-icon"><span class="material-icons">email</span></span> Email
+                    </label>
+                    <input type="email" name="email" id="email" value="{{ user.email }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">
+                        <span class="label-icon"><span class="material-icons">cake</span></span> Age (Optional)
+                    </label>
+                    <input type="number" name="age" id="age" value="{{ profile.age|default:'' }}" min="1" max="150">
+                </div>
+
+                <div class="form-group">
+                    <label for="profile_picture">
+                        <span class="label-icon"><span class="material-icons">photo_camera</span></span> Profile Picture (Optional)
+                    </label>
+                    <input type="file" name="profile_picture" id="profile_picture" accept="image/*" class="file-input">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-icon"><span class="material-icons">save</span></span> Save Changes
+                </button>
+            </form>
+        </div>
+
+        <div class="actions-card">
+            <h3 class="card-title">
+                <span class="title-icon"><span class="material-icons">bolt</span></span>
+                Quick Actions
+            </h3>
+
+            <div class="actions-list">
+                <a href="{% url 'dashboard' %}" class="action-btn">
+                    <span class="action-icon"><span class="material-icons">home</span></span>
+                    <span>Go to Dashboard</span>
+                </a>
+
+                <a href="{% url 'schedule' %}" class="action-btn">
+                    <span class="action-icon"><span class="material-icons">calendar_today</span></span>
+                    <span>Schedule Tasks</span>
+                </a>
+
+                <a href="{% url 'history' %}" class="action-btn">
+                    <span class="action-icon"><span class="material-icons">bar_chart</span></span>
+                    <span>View History</span>
+                </a>
+
+                <form method="post" style="margin: 0; width: 100%;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_theme">
+                    <button type="submit" class="action-btn theme-btn">
+                        <span class="action-icon"><span class="material-icons">palette</span></span>
+                        <span>
+                            {% if profile.dark_theme %}
+                                Switch to Light Mode
+                            {% else %}
+                                Switch to Dark Mode
+                            {% endif %}
+                        </span>
+                    </button>
+                </form>
+
+                <a href="{% url 'logout' %}" class="action-btn danger">
+                    <span class="action-icon"><span class="material-icons">logout</span></span>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.profile-header {
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 36px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.profile-card, .stats-card, .edit-card, .actions-card {
+    background: var(--secondary-blue);
+    border: 2px solid var(--border-color);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.profile-avatar-section {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--bright-blue);
+    margin-bottom: 16px;
+}
+
+.profile-avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bright-blue), var(--light-blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 900;
+    color: white;
+    margin: 0 auto 16px;
+}
+
+.profile-name h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.profile-username {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--primary-blue);
+    border-radius: 12px;
+}
+
+.detail-icon {
+    font-size: 24px;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.key-value {
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--light-blue);
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.stat-box {
+    background: var(--primary-blue);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-box:hover {
+    transform: translateY(-4px);
+    border-color: var(--bright-blue);
+}
+
+.stat-box.success { border-color: var(--success); }
+.stat-box.warning { border-color: var(--warning); }
+.stat-box.info { border-color: var(--info); }
+
+.stat-box .stat-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.stat-box .stat-number {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--light-blue);
+    margin-bottom: 4px;
+}
+
+.stat-box .stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.file-input {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--primary-blue);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+
+.action-btn:hover {
+    background: var(--accent-blue);
+    border-color: var(--bright-blue);
+    transform: translateX(4px);
+}
+
+.action-btn.danger {
+    border-color: var(--error);
+}
+
+.action-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--error);
+}
+
+.action-btn.theme-btn {
+    border-color: #f59e0b;
+}
+
+.action-btn.theme-btn:hover {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+}
+
+.action-icon {
+    font-size: 24px;
+}
+
+@media (max-width: 768px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

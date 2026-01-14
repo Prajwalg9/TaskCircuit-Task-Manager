@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - TaskCircuit{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon"><span class="material-icons">bolt</span></div>
+            <h2 class="auth-title">Create Your Account</h2>
+            <p class="auth-subtitle">Join TaskCircuit and manage your tasks efficiently</p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">
+                        <span class="label-icon"><span class="material-icons">person</span></span> First Name
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="field-error">{{ form.first_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">
+                        <span class="label-icon"><span class="material-icons">person</span></span> Last Name
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="field-error">{{ form.last_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">
+                    <span class="label-icon"><span class="material-icons">vpn_key</span></span> Username
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="field-error">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">
+                    <span class="label-icon"><span class="material-icons">email</span></span> Email Address
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="field-error">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.password1.id_for_label }}">
+                        <span class="label-icon"><span class="material-icons">lock</span></span> Password
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div class="field-error">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.password2.id_for_label }}">
+                        <span class="label-icon"><span class="material-icons">lock</span></span> Confirm Password
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div class="field-error">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.age.id_for_label }}">
+                    <span class="label-icon"><span class="material-icons">cake</span></span> Age (Optional)
+                </label>
+                {{ form.age }}
+                {% if form.age.errors %}
+                    <div class="field-error">{{ form.age.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.profile_picture.id_for_label }}" class="file-label">
+                    <span class="label-icon"><span class="material-icons">photo_camera</span></span> Profile Picture (Optional)
+                </label>
+                <div class="file-input-wrapper">
+                    {{ form.profile_picture }}
+                    <span class="file-input-text">Choose an image</span>
+                </div>
+                {% if form.profile_picture.errors %}
+                    <div class="field-error">{{ form.profile_picture.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+                Continue to Key Creation <span class="material-icons">arrow_forward</span>
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'login' %}" class="auth-link">Login here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const fileInput = document.querySelector('input[type="file"]');
+if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name || 'Choose an image';
+        const fileText = document.querySelector('.file-input-text');
+        if (fileText) {
+            fileText.textContent = fileName;
+        }
+    });
+}
+</script>
+{% endblock %}

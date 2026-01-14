@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TaskCircuit{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Material+Icons&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="{% if user.is_authenticated and user.profile.dark_theme %}dark-theme{% else %}light-theme{% endif %}">
+    <nav>
+        <div class="logo">
+            <span class="logo-wrapper">
+                <span class="material-icons logo-icon">bolt</span> 
+                <span class="logo-text">TaskCircuit</span>
+            </span>
+        </div>
+        <div class="links">
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" title="Home">
+                    <span class="material-icons">dashboard</span> Dashboard
+                </a>
+                <a href="{% url 'schedule' %}" title="Upcoming">
+                    <span class="material-icons">event_note</span> Schedule
+                </a>
+                <a href="{% url 'history' %}" title="Past Tasks">
+                    <span class="material-icons">history</span> History
+                </a>
+                <a href="{% url 'profile' %}" title="Settings">
+                    <span class="material-icons">manage_accounts</span> Profile
+                </a>
+                <a href="{% url 'logout' %}" class="nav-logout">
+                    <span class="material-icons">power_settings_new</span> Logout
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}">
+                    <span class="material-icons">login</span> Login
+                </a>
+                <a href="{% url 'register' %}">
+                    <span class="material-icons">person_add</span> Register
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message message-{{ message.tags }}">
+                    <span class="material-icons message-icon">
+                        {% if message.tags == 'success' %}check_circle
+                        {% elif message.tags == 'error' %}error
+                        {% else %}info{% endif %}
+                    </span>
+                    <span class="message-text">{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

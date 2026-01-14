@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - TaskCircuit{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon"><span class="material-icons">bolt</span></div>
+            <h2 class="auth-title">Welcome Back</h2>
+            <p class="auth-subtitle">Enter your unique 6-digit key to continue</p>
+        </div>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.unique_key.id_for_label }}">
+                    <span class="label-icon"><span class="material-icons">key</span></span> Your Unique Key
+                </label>
+                <div class="key-input-wrapper">
+                    {{ form.unique_key }}
+                </div>
+                {% if form.unique_key.errors %}
+                    <div class="field-error">{{ form.unique_key.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+                <span class="btn-icon"><span class="material-icons">rocket_launch</span></span> Login to Dashboard
+            </button>
+        </form>
+        
+        <div class="auth-divider">
+            <span>or</span>
+        </div>
+        
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{% url 'register' %}" class="auth-link">Register here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const keyInput = document.getElementById('id_unique_key');
+if (keyInput) {
+    keyInput.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+    });
+    
+    keyInput.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+    });
+    
+    keyInput.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+    });
+}
+</script>
+{% endblock %}

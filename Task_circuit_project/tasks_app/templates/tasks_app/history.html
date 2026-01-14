@@ -1,0 +1,585 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}History - TaskCircuit{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="history-header">
+        <h1 class="page-title">
+            <span class="title-icon"><span class="material-icons">bar_chart</span></span>
+            Task History
+        </h1>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <span class="material-icons">arrow_back</span> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="history-grid">
+        <div class="date-selector-section">
+            <div class="section-card">
+                <h2 class="section-title">
+                    <span class="title-icon"><span class="material-icons">calendar_month</span></span>
+                    Select Date
+                </h2>
+
+                <form method="get" class="date-form">
+                    <div class="form-group">
+                        <label for="date">
+                            <span class="label-icon"><span class="material-icons">calendar_today</span></span> Choose Date
+                        </label>
+                        <input type="date" name="date" id="date" value="{{ selected_date|date:'Y-m-d' }}" class="date-input" onchange="this.form.submit()">
+                    </div>
+                </form>
+
+                <div class="current-date-display">
+                    <div class="calendar-icon"><span class="material-icons">event</span></div>
+                    <div>
+                        <div class="current-date">{{ selected_date|date:"F d, Y" }}</div>
+                        <div class="current-day">{{ selected_date|date:"l" }}</div>
+                    </div>
+                </div>
+
+                {% if dates_with_tasks %}
+                <div class="recent-dates">
+                    <h3 class="recent-title">Recent Dates</h3>
+                    <div class="dates-list">
+                        {% for date in dates_with_tasks|slice:":10" %}
+                        <a href="?date={{ date|date:'Y-m-d' }}" class="date-link {% if date == selected_date %}active{% endif %}">
+                            <span class="date-number">{{ date|date:"d" }}</span>
+                            <span class="date-month">{{ date|date:"M" }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="history-tasks-section">
+            <div class="section-card">
+                <div class="card-header">
+                    <h2 class="section-title">
+                        <span class="title-icon"><span class="material-icons">assignment</span></span>
+                        Tasks for {{ selected_date|date:"F d, Y" }}
+                    </h2>
+                    {% if tasks %}
+                    <div class="stats-summary">
+                        <span class="stat-item completed">
+                            <span class="material-icons">check</span> {{ completed_count }} Completed
+                        </span>
+                        <span class="stat-item pending">
+                            <span class="material-icons">pending</span> {{ pending_count }} Pending
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="history-tasks-container">
+                    {% if tasks %}
+                        <div class="tasks-list">
+                            {% for task in tasks %}
+                            <div class="history-task-item {% if task.completed %}completed{% endif %} priority-{{ task.priority }}">
+                                <div class="task-status">
+                                    {% if task.completed %}
+                                        <span class="status-icon completed"><span class="material-icons">check</span></span>
+                                    {% else %}
+                                        <span class="status-icon pending"><span class="material-icons">schedule</span></span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="task-content">
+                                    <h3 class="task-title">{{ task.title }}</h3>
+                                    <div class="task-meta">
+                                        <span class="priority-badge priority-{{ task.priority }}">
+                                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">fiber_manual_record</span>
+                                            {{ task.get_priority_display }}
+                                        </span>
+                                        {% if task.completed %}
+                                            <span class="completed-time">
+                                                <span class="material-icons" style="font-size: 12px; vertical-align: middle;">check_circle</span> Completed at {{ task.completed_at|date:"g:i A" }}
+                                            </span>
+                                        {% endif %}
+                                        <span class="created-time">
+                                            Created: {{ task.created_at|date:"g:i A" }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="task-actions">
+                                    <form method="post" action="{% url 'toggle_task' task.id %}" class="inline-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-icon-action toggle" title="Toggle completion">
+                                            {% if task.completed %}<span class="material-icons">undo</span>{% else %}<span class="material-icons">check</span>{% endif %}
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'delete_task' task.id %}" class="inline-form" onsubmit="return confirm('Delete this task?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-icon-action delete" title="Delete task">
+                                            <span class="material-icons">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="summary-stats">
+                            <div class="summary-card">
+                                <div class="summary-icon"><span class="material-icons">analytics</span></div>
+                                <div class="summary-content">
+                                    <div class="summary-label">Completion Rate</div>
+                                    <div class="summary-value">{{ completion_rate }}%</div>
+                                </div>
+                            </div>
+                            <div class="summary-card" style="margin-top: 16px;">
+                                <div class="summary-icon"><span class="material-icons">fact_check</span></div>
+                                <div class="summary-content">
+                                    <div class="summary-label">Task Summary</div>
+                                    <div class="summary-value" style="font-size: 18px;">
+                                        {{ completed_count }} / {{ tasks.count }} completed
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon"><span class="material-icons">inventory_2</span></div>
+                            <h3 class="empty-title">No Tasks Found</h3>
+                            <p class="empty-text">No tasks were scheduled for {{ selected_date|date:"F d, Y" }}</p>
+                            <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                                Go to Dashboard
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.history-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 36px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-icon {
+    font-size: 36px;
+}
+
+.history-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+}
+
+.section-card {
+    background: var(--secondary-blue);
+    border: 2px solid var(--border-color);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-form {
+    margin-bottom: 24px;
+}
+
+.date-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--primary-blue);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--bright-blue);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+.current-date-display {
+    background: linear-gradient(135deg, var(--bright-blue), var(--light-blue));
+    padding: 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.calendar-icon {
+    font-size: 48px;
+}
+
+.current-date {
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+}
+
+.current-day {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.recent-dates {
+    border-top: 2px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.recent-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+}
+
+.dates-list {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.date-link {
+    background: var(--primary-blue);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.date-link:hover, .date-link.active {
+    background: var(--accent-blue);
+    border-color: var(--bright-blue);
+    transform: translateY(-2px);
+}
+
+.date-number {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.date-month {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.stats-summary {
+    display: flex;
+    gap: 16px;
+}
+
+.stat-item {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+.stat-item.completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.stat-item.pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+}
+
+.history-tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-task-item {
+    background: var(--primary-blue);
+    border: 2px solid var(--border-color);
+    border-left: 4px solid var(--bright-blue);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+}
+
+.history-task-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.history-task-item.completed {
+    opacity: 0.8;
+}
+
+.history-task-item.priority-high {
+    border-left-color: #ef4444;
+}
+
+.history-task-item.priority-medium {
+    border-left-color: #f59e0b;
+}
+
+.history-task-item.priority-low {
+    border-left-color: #10b981;
+}
+
+.task-status {
+    flex-shrink: 0;
+}
+
+.status-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.status-icon.completed {
+    background: var(--success);
+    color: white;
+}
+
+.status-icon.pending {
+    background: var(--warning);
+    color: white;
+}
+
+.task-content {
+    flex: 1;
+}
+
+.task-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.history-task-item.completed .task-title {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.priority-badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-badge.priority-high {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.priority-badge.priority-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.priority-badge.priority-low {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.completed-time, .created-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.completed-time {
+    color: var(--success);
+}
+
+.task-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.inline-form {
+    margin: 0;
+}
+
+.btn-icon-action {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-icon-action:hover {
+    background: var(--accent-blue);
+    transform: scale(1.1);
+}
+
+.btn-icon-action.delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.summary-stats {
+    background: var(--primary-blue);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.summary-icon {
+    font-size: 40px;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.summary-value {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--light-blue);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.empty-text {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+    .history-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dates-list {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .page-title {
+        font-size: 28px;
+    }
+}
+</style>
+{% endblock %}
